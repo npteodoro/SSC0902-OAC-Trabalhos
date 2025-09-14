@@ -1,7 +1,9 @@
-.data
+	.data
 	# estrutura de dados para lista encadeada usando alocação dinâmica
+	.align 2 #define o alinhamento da memória para o tamanho de 2^2 bytes, 32 bits.
 	head: .word 0 # ponteiro para o primeiro nó da lista (NULL = lista vazia)
 	
+	.align 0 #define o alinhamento da memória para o tamanho de 2^0 bytes, 8 bits.
 	welcome: .asciz "Bem-vindo ao Sistema de Inventário!\n"
 	menu: .asciz "1 - Adicionar item\n2 - Remover item\n3 - Listar inventário\n4 - Buscar item\n5 - Sair\nOpção: "
 	invalid_option: .asciz "Opção inválida! Tente novamente.\n"
@@ -13,7 +15,9 @@
 	msg_exit: .asciz "Saindo...\n"
 	newline: .asciz "\n"
 
-.text
+	.text
+	.globl main #
+	.align 2 #define o alinhamento da memória para o tamanho de 2^2 bytes, 32 bits.
 main:
 	# === IMPRIME BOAS-VINDAS ===
 	la a0, welcome # carrega endereço da string de boas-vindas
