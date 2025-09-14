@@ -64,12 +64,24 @@ read_int:
 
 # === FUNÇÃO DE ALOCAÇÃO DE MEMÓRIA ===
 allocate_node:
+	# --- prólogo ---
+	# salva o endereço de retorno na pilha por precaução, já que 'ecall' será chamada
+	addi sp, sp, -4 # abre espaço na pilha para 1 registrador
+	sw ra, 0(sp) # salva o 'ra' na pilha
+	
+	# --- corpo ---
 	# aloca 8 bytes para um novo nó (4 bytes ID + 4 bytes ponteiro)
 	addi a0, zero, 8 # número de bytes a alocar
 	addi a7, zero, 9 # syscall: sbrk (alocação de memória)
 	ecall # executa chamada do sistema
 	# retorna em a0 o endereço do bloco alocado
-	jr ra # retorna para o chamador
+	
+	# --- epílogo ---
+	# restaura o endereço de retorno antes de sair
+	lw ra, 0(sp) # pega o 'ra' original de volta da pilha
+	addi sp, sp, 4 # libera o espaço na pilha
+	
+	jr ra # retorna com segurança
 
 # === FUNÇÃO DE INICIALIZAÇÃO DE NÓ ===
 init_node:
