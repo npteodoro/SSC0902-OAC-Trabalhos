@@ -9,6 +9,7 @@
 	invalid_option: .asciz "Opção inválida! Tente novamente.\n"
 	prompt_item: .asciz "Digite o ID do item: "
 	msg_add: .asciz "Adicionando item: "
+	msg_error_remove: .asciz "ERRO: não existe itens a serem removidos"
 	msg_remove: .asciz "Removendo item: "
 	msg_list: .asciz "Listando inventário...\n"
 	msg_search: .asciz "Buscando item: "
@@ -109,6 +110,15 @@ init_node:
 
 # === OPÇÃO 1: ADICIONAR ITEM ===
 option_add:
+
+	
+	# DECISÃO ARQUITETURAL: permitir IDs duplicados ou não?
+	# soluçao:permitir duplicados - apenas inserir no início
+	# - inserir novo nó no início da lista (mais simples)
+	# - atualizar ponteiro head para novo nó
+	# - fazer novo nó apontar para antigo head
+	# [REGIÃO DE IMPLEMENTAÇÃO - INSERIR NA LISTA]
+
 	# solicita ID do item
 	la a0, prompt_item # carrega endereço do prompt
 	jal print_string # chama função para imprimir string
@@ -126,14 +136,6 @@ option_add:
 	jal init_node # inicializa nó com ID e next = NULL
 	
 
-	# TODO: implementar inserção na lista encadeada
-	# DECISÃO ARQUITETURAL: permitir IDs duplicados ou não?
-	# Opção A: permitir duplicados - apenas inserir no início
-	# Opção B: verificar duplicados - percorrer lista antes de inserir
-	# - inserir novo nó no início da lista (mais simples)
-	# - atualizar ponteiro head para novo nó
-	# - fazer novo nó apontar para antigo head
-	# [REGIÃO DE IMPLEMENTAÇÃO - INSERIR NA LISTA]
 	
 	# exibe confirmação
 	la a0, msg_add # carrega endereço da mensagem de adição
@@ -150,35 +152,35 @@ option_add:
 
 # === OPÇÃO 2: REMOVER ITEM ===
 option_remove:
-	# solicita ID do item
-	la a0, prompt_item # carrega endereço do prompt
-	jal print_string # chama função para imprimir string
-
-	jal read_int # lê o ID do item
-	add t1, a0, zero # move o ID para t1
-	
+		
 	# TODO: implementar lógica de remoção da lista encadeada
-	# DECISÃO ARQUITETURAL: como tratar IDs duplicados?
-	# Opção A: remover apenas primeira ocorrência
-	# Opção B: remover todas as ocorrências do ID
-	# - percorrer lista para encontrar nó(s) com ID
-	# - ajustar ponteiros (nó anterior aponta para próximo)
-	# - liberar memória com free (se implementado)
-	# - atualizar ponteiro head se removendo primeiro nó
-	# - tratar caso de item não encontrado
+	# - atualizar ponteiro head 
+	# - tratar caso de item não existente
+
 	# [REGIÃO DE IMPLEMENTAÇÃO - REMOVER]
 	
 	# exibe confirmação
 	la a0, msg_remove # carrega endereço da mensagem de remoção
 	jal print_string # chama função para imprimir string
 	
-	add a0, t1, zero # move o ID para a0
+	la t1, head #carrega endereço do head em t1
+	lw t2,0(t1) #carrega valor do head em t2
+	beq t2,zero,error_null #verifica se existe um item para remover, se não existir da erro
+
+	lw t3,4(t2) #carrega valor do campo next do item a ser removido
+	sw t3,0(t1) #atualiza head para o proximo item, assim removendo o primeiro item
+	lw a0,0(t2) #carrega o ID do item a ser removido em a0
 	jal print_int # chama função para imprimir inteiro
 
 	la a0, newline # carrega endereço da string de nova linha
 	jal print_string # chama função para imprimir string
 	
 	j menu_loop # retorna ao loop do menu
+
+error_null:
+	la a0, msg_error_remove #carrega endereço da mensagem de erro de remoção
+	jal print_string #chama a função para imprimir string
+	jal menu_loop #volta para o loop do menu
 
 # === OPÇÃO 3: LISTAR INVENTÁRIO ===
 option_list:
