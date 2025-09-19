@@ -98,6 +98,12 @@ init_node:
 	# inicializa ponteiro next com NULL (0) nos últimos 4 bytes  
 	addi t0, zero, 0 # carrega valor NULL (0)
 	sw t0, 4(a0) # guarda NULL no offset 4 (ponteiro next)
+
+	la t3, head #carregar endereço head
+	lw t0, 0(t3) #carregar o valor do head
+	sw t0, 4(a0) #carregar o valor do head no next do item adicionado
+	sw a0, 0(t3) #apontar head para o novo primeiro item
+	
 	
 	jr ra # retorna para o chamador
 
@@ -119,6 +125,7 @@ option_add:
 	add a1, t1, zero # ID do item em a1
 	jal init_node # inicializa nó com ID e next = NULL
 	
+
 	# TODO: implementar inserção na lista encadeada
 	# DECISÃO ARQUITETURAL: permitir IDs duplicados ou não?
 	# Opção A: permitir duplicados - apenas inserir no início
@@ -134,6 +141,7 @@ option_add:
 
 	add a0, t1, zero # move o ID para a0
 	jal print_int # chama função para imprimir inteiro
+
 
 	la a0, newline # carrega endereço da string de nova linha
 	jal print_string # chama função para imprimir string
