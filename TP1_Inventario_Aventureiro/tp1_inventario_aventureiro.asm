@@ -9,12 +9,15 @@
 	invalid_option: .asciz "Opção inválida! Tente novamente.\n"
 	prompt_item: .asciz "Digite o ID do item: "
 	msg_add: .asciz "Adicionando item: "
-	msg_error_remove: .asciz "ERRO: não existe itens a serem removidos"
+	msg_error_remove: .asciz "ERRO: não existe itens no inventario.\n"
 	msg_remove: .asciz "Removendo item: "
 	msg_list: .asciz "Listando inventário...\n"
 	msg_search: .asciz "Buscando item: "
 	msg_exit: .asciz "Saindo...\n"
 	newline: .asciz "\n"
+	msg_lista_percorrida: .asciz "inventario listado com sucesso.\n"
+	msg_item_encontrado: .asciz "esse item esta presente no seu inventario.\n"
+	msg_sem_item: .asciz "esse item não esta presente no seu inventario.\n"
 
 	.text
 	.globl main #
@@ -153,7 +156,6 @@ option_add:
 # === OPÇÃO 2: REMOVER ITEM ===
 option_remove:
 		
-	# TODO: implementar lógica de remoção da lista encadeada
 	# - atualizar ponteiro head 
 	# - tratar caso de item não existente
 
@@ -187,7 +189,6 @@ option_list:
 	# TODO: implementar lógica de listagem da lista encadeada
 	# DECISÃO ARQUITETURAL: como exibir IDs duplicados?
 	# Opção A: mostrar todos (incluindo duplicados)
-	# Opção B: mostrar apenas IDs únicos
 	# - começar do ponteiro head
 	# - percorrer lista seguindo ponteiros next
 	# - imprimir ID de cada nó (primeiros 4 bytes)
@@ -198,16 +199,34 @@ option_list:
 	
 	la a0, msg_list # carrega endereço da mensagem de listagem
 	jal print_string # chama função para imprimir string
+
+	la t1, head #carrega endereço do head em t1
+	lw t2,0(t1) #carrega valor do head em t2
+	beq t2,zero,error_null #verifica se existe itens a serem listados, se não existir da erro
+	j loop_list #inicia o loop de listagem
+
+	
+	
+fim_do_loop_list:
+	la a0, msg_lista_percorrida #carrega msg de lista percorrida
+	jal print_string #chama a função imprimir string
+	
 	j menu_loop # retorna ao loop do menu
+
+loop_list:
+	lw a0, 0(t2) #carrega em a0 o ID do item
+	jal print_int #chama a função de imprimir inteiro, para imprimir o ID do item
+	la a0, newline # carrega endereço da string de nova linha
+	jal print_string # chama função para imprimir string
+	lw t2,4(t2) #carrega em t2 o valor do endereço do priximo item (next)
+	beq  t2,zero,fim_do_loop_list #se o valor do endereço for nulo acaba o loop (fim de inventario)
+	j loop_list #se não volta para o começo do loop
+
 
 # === OPÇÃO 4: BUSCAR ITEM ===
 option_search:
-	# solicita ID do item
-	la a0, prompt_item # carrega endereço do prompt
-	jal print_string # chama função para imprimir string
 
-	jal read_int # lê o ID do item
-	add t1, a0, zero # move o ID para t1
+	
 	
 	# TODO: implementar lógica de busca na lista encadeada
 	# DECISÃO ARQUITETURAL: como reportar IDs duplicados?
@@ -221,6 +240,17 @@ option_search:
 	# - considerar se deve continuar buscando após encontrar
 	# [REGIÃO DE IMPLEMENTAÇÃO - BUSCAR]
 	
+	# solicita ID do item
+	la a0, prompt_item # carrega endereço do prompt
+	jal print_string # chama função para imprimir string
+
+	jal read_int # lê o ID do item
+	add t1, a0, zero # move o ID para t1
+
+	la t3, head #carrega endereço do head em t1
+	lw t2,0(t3) #carrega valor do head em t2
+	beq t2,zero,error_null #verifica se existe itens a serem listados, se não existir da erro
+	
 	# exibe confirmação
 	la a0, msg_search # carrega endereço da mensagem de busca
 	jal print_string # chama função para imprimir string
@@ -231,7 +261,29 @@ option_search:
 	la a0, newline # carrega endereço da string de nova linha
 	jal print_string # chama função para imprimir string
 	
+	j loop_busca #inicia o loop de listagem
+
+	
+loop_busca:
+	lw t4, 0(t2) #carrega em a0 o ID do item
+	lw t2,4(t2) #carrega em t2 o valor do endereço do priximo item (next)
+	beq t4,t1,item_encontrado #se o ID do item for igual ao ID procurado vai para item encontrado
+	beq  t2,zero,sem_item #se o valor do endereço for nulo acaba o loop (fim de inventario)
+	j loop_busca #se não volta para o começo do loop
+
+item_encontrado:
+	la a0, msg_item_encontrado #carrega msg item encontrado
+	jal print_string #chama a função imprimir string
+	
 	j menu_loop # retorna ao loop do menu
+
+sem_item:
+	la a0, msg_sem_item #carrega msg de sem item
+	jal print_string #chama a função imprimir string
+	
+	j menu_loop # retorna ao loop do menu
+
+
 
 # === OPÇÃO 5: SAIR DO PROGRAMA ===
 option_exit:
